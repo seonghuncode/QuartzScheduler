@@ -1,0 +1,50 @@
+<!-- root-context.xml -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+         http://www.springframework.org/schema/beans 
+         http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- 비즈니스 로직을 수행할 Service 빈 등록 -->
+	<bean id="myJobService"
+		class="com.ysh.quartzScheduler.service.MyJobService" />
+
+	<!-- Quartz Job을 실행할 객체 빈 등록 -->
+	<bean id="myJob" class="com.ysh.quartzScheduler.util.MyJob">
+		<property name="myJobService" ref="myJobService" />
+	</bean>
+
+	<!-- MethodInvokingJobDetailFactoryBean: 일반 Java 객체를 Job으로 래핑 -->
+	<bean id="jobDetail"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="myJob" />
+		<property name="targetMethod" value="execute" />
+		<property name="concurrent" value="false" />
+	</bean>
+
+	<!-- CronTrigger 설정 (매일 자정) -->
+	<bean id="cronTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="jobDetail" />
+		<!-- 매일 자정 -->
+		<!-- <property name="cronExpression" value="0 0 0 * * ?" /> -->
+		<!-- 5초마다 -->
+		<property name="cronExpression" value="0/5 * * * * ?" />
+		<!-- <property name="cronExpression" value="0 0 6 * * ?" /> -->
+	</bean>
+
+	<!-- Quartz 스케줄러 등록 -->
+	<bean id="schedulerFactory" class="org.springframework.scheduling.quartz.SchedulerFactoryBean" destroy-method="destroy">
+		<!-- destory및 아래 설정을 하지 않을 경우  Quartz Scheduler가 생성한 워커 스레드를 tomcat이 정상저긍로 종료하지 못 할 경우 메모리 누스 경고 발생 -->
+		<!-- 따라서 desctroy-method=destroy를 통해 spring이 context 종료 시 quartz의 scheduler.shutdown을 호출 -->
+		<property name="autoStartup" value="true" />
+		<property name="waitForJobsToCompleteOnShutdown" value="true" />
+		<property name="overwriteExistingJobs" value="true" />
+		<property name="triggers">
+			<list>
+				<ref bean="cronTrigger" />
+			</list>
+		</property>
+	</bean>
+
+</beans>

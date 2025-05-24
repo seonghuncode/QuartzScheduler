@@ -4,5 +4,8 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
 	
 	<!-- Root Context: defines shared resources visible to all other web components -->
+	
+	<!-- Quartz 설정을 분리해서 포함 -->
+    <import resource="scheduler-context.xml" />
 		
 </beans>
